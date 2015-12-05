@@ -338,7 +338,7 @@ unsigned char toktoi() {
 
 		ptok = s; // Point top of command line
 
-				  // Try numeric conversion
+		// Try numeric conversion
 		if (c_isdigit(*ptok)) {
 			value = 0;
 			tmp = 0;
@@ -357,8 +357,8 @@ unsigned char toktoi() {
 			}
 			s = ptok;
 			ibuf[len++] = I_NUM;
-			*(short *)(ibuf + len) = value;
-			len += 2;
+			ibuf[len++] = value & 255;
+			ibuf[len++] = value >> 8;
 		}
 		else
 
@@ -407,11 +407,11 @@ unsigned char toktoi() {
 	return len; // Return byte length
 }
 
-// Get line numbere by line pointer
+// Get line number by line pointer
 short getlineno(unsigned char *lp) {
 	if (*lp == 0) //end of list
 		return 32767;// max line bumber
-	return  *(short*)(lp + 1);
+	return *(lp + 1) | *(lp + 2) << 8;
 }
 
 // Search line by line number
@@ -500,7 +500,7 @@ void putlist(unsigned char* ip) {
 			// Case numeric
 			if (*ip == I_NUM) {
 				ip++;
-				putnum(*(short*)ip, 0);
+				putnum(*ip | *(ip + 1) << 8, 0);
 				ip += 2;
 				if (!nospaceb(*ip)) c_putch(' ');
 			}
@@ -573,7 +573,7 @@ short ivalue() {
 	switch (*cip) {
 	case I_NUM:
 		cip++;
-		value = *(short*)cip;
+		value = *cip | *(cip + 1) << 8;
 		cip += 2;
 		break;
 	case I_PLUS:
