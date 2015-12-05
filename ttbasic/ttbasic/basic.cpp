@@ -357,51 +357,51 @@ unsigned char toktoi() {
 			}
 			s = ptok;
 			ibuf[len++] = I_NUM;
-			ibuf[len++] = value & 255;
-			ibuf[len++] = value >> 8;
+			*(short *)(ibuf + len) = value;
+			len += 2;
 		}
 		else
 
-			// Try string conversion
-			if (*s == '\"' || *s == '\'') {// If start of string
-				c = *s++;
-				ptok = s;
-				for (i = 0; (*ptok != c) && c_isprint(*ptok); i++) // Get length
-					ptok++;
-				if (len >= SIZE_IBUF - 1 - i) { // List area full
-					err = ERR_IBUFOF;
-					return 0;
-				}
-				ibuf[len++] = I_STR; // Put i-code
-				ibuf[len++] = i; // Put length
-				while (i--) { // Put string
-					ibuf[len++] = *s++;
-				}
-				if (*s == c) s++; // Skip " or '
+		// Try string conversion
+		if (*s == '\"' || *s == '\'') {// If start of string
+			c = *s++;
+			ptok = s;
+			for (i = 0; (*ptok != c) && c_isprint(*ptok); i++) // Get length
+				ptok++;
+			if (len >= SIZE_IBUF - 1 - i) { // List area full
+				err = ERR_IBUFOF;
+				return 0;
 			}
-			else
+			ibuf[len++] = I_STR; // Put i-code
+			ibuf[len++] = i; // Put length
+			while (i--) { // Put string
+				ibuf[len++] = *s++;
+			}
+			if (*s == c) s++; // Skip " or '
+		}
+		else
 
-				// Try variable conversion
-				if (c_isalpha(*ptok)) {
-					if (len >= SIZE_IBUF - 2) {
-						err = ERR_IBUFOF;
-						return 0;
-					}
-					if (len >= 4 && ibuf[len - 2] == I_VAR && ibuf[len - 4] == I_VAR) { // Case series of variables
-						err = ERR_SYNTAX; // Syntax error
-						return 0;
-					}
-					ibuf[len++] = I_VAR; // Put i-code
-					ibuf[len++] = c_toupper(*ptok) - 'A'; // Put index of valiable area
-					s++;
-				}
-				else
+		// Try variable conversion
+		if (c_isalpha(*ptok)) {
+			if (len >= SIZE_IBUF - 2) {
+				err = ERR_IBUFOF;
+				return 0;
+			}
+			if (len >= 4 && ibuf[len - 2] == I_VAR && ibuf[len - 4] == I_VAR) { // Case series of variables
+				err = ERR_SYNTAX; // Syntax error
+				return 0;
+			}
+			ibuf[len++] = I_VAR; // Put i-code
+			ibuf[len++] = c_toupper(*ptok) - 'A'; // Put index of valiable area
+			s++;
+		}
+		else
 
-					// Nothing mutch
-				{
-					err = ERR_SYNTAX;
-					return 0;
-				}
+		// Nothing mutch
+		{
+			err = ERR_SYNTAX;
+			return 0;
+		}
 	}
 	ibuf[len++] = I_EOL; // Put end of line
 	return len; // Return byte length
